@@ -119,12 +119,26 @@ class LinkedInProvider extends AbstractProvider implements ProviderInterface
         $headline = Arr::get($user, 'headline.localized.'.$preferredLocale);
 
         $images = (array) Arr::get($user, 'profilePicture.displayImage~.elements', []);
+
+        $avatar = null;
+        $avatar_original = null;
+
+        foreach($images as $image) {
+            if ($image['data']['com.linkedin.digitalmedia.mediaartifact.StillImage']['storageSize']['width'] === 100) {
+                $avatar = $image['identifiers'][0]['identifier'];
+            } else if ($image['data']['com.linkedin.digitalmedia.mediaartifact.StillImage']['storageSize']['width'] === 800) {
+                $avatar_original = $image['identifiers'][0]['identifier'];
+            }
+        }
+
+        /*
         $avatar = Arr::first(Arr::where($images, function ($image) {
             return $image['data']['com.linkedin.digitalmedia.mediaartifact.StillImage']['storageSize']['width'] === 100;
         }), function() {return true;});
         $originalAvatar = Arr::first(Arr::where($images, function ($image) {
             return $image['data']['com.linkedin.digitalmedia.mediaartifact.StillImage']['storageSize']['width'] === 800;
         }), function() {return true;});
+        */
 
         return (new User)->setRaw($user)->map([
             'id' => $user['id'],
@@ -135,8 +149,8 @@ class LinkedInProvider extends AbstractProvider implements ProviderInterface
             'last_name' => $lastName,
             'vanityName' => Arr::get($user, 'vanityName'),
             'email' => Arr::get($user, 'emailAddress'),
-            'avatar' => Arr::get($avatar, 'identifiers.0.identifier'),
-            'avatar_original' => Arr::get($originalAvatar, 'identifiers.0.identifier'),
+            'avatar' => $avatar,
+            'avatar_original' => $avatar_original,
         ]);
         
         /*
