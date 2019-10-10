@@ -21,6 +21,13 @@ class LinkedInProvider extends AbstractProvider implements ProviderInterface
     protected $scopeSeparator = ' ';
 
     /**
+     * The type of the encoding in the query.
+     *
+     * @var int Can be either PHP_QUERY_RFC3986 or PHP_QUERY_RFC1738.
+     */
+    protected $encodingType = PHP_QUERY_RFC3986;
+
+    /**
      * The fields that are included in the profile.
      *
      * @var array
@@ -76,7 +83,7 @@ class LinkedInProvider extends AbstractProvider implements ProviderInterface
      */
     protected function getBasicProfile($token)
     {
-        $url = 'https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))';
+        $url = 'https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,localizedHeadline,vanityName,profilePicture(displayImage~:playableStreams))';
 
         $response = $this->getHttpClient()->get($url, [
             'headers' => [
@@ -113,10 +120,13 @@ class LinkedInProvider extends AbstractProvider implements ProviderInterface
     protected function mapUserToObject(array $user)
     {
         $preferredLocale = Arr::get($user, 'firstName.preferredLocale.language').'_'.Arr::get($user, 'firstName.preferredLocale.country');
-        $firstName = Arr::get($user, 'firstName.localized.'.$preferredLocale);
-        $lastName = Arr::get($user, 'lastName.localized.'.$preferredLocale);
+        #$firstName = Arr::get($user, 'firstName.localized.'.$preferredLocale);
+        #$lastName = Arr::get($user, 'lastName.localized.'.$preferredLocale);
 
-        $headline = Arr::get($user, 'headline.localized.'.$preferredLocale);
+        $firstName = Arr::get($user, 'localizedFirstName');
+        $lastName = Arr::get($user, 'localizedLastName');
+
+        $headline = Arr::get($user, 'localizedHeadline');
 
         $images = (array) Arr::get($user, 'profilePicture.displayImage~.elements', []);
 
